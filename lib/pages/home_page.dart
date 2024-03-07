@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -20,7 +20,7 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             onPressed: () {
               // Redirigir a la página de inicio de sesión
-              Navigator.pushReplacementNamed(context, '/login_page');
+              Navigator.pushReplacementNamed(context, '/');
             },
             icon: const Icon(Icons.logout),
           ),
