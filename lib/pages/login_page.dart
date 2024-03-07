@@ -1,67 +1,105 @@
-import 'package:counter_test/pages/home_page.dart';
-import 'package:counter_test/pages/reset_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 final TextEditingController _emailController = TextEditingController();
 final TextEditingController _passwordController = TextEditingController();
 
+final FacebookAuth _facebookAuth = FacebookAuth.instance;
+final GoogleSignIn _googleSignIn = GoogleSignIn(
+  clientId: '235029653016-v2eekuvqd7g6p9ps1kn02nnnpv3up5i0.apps.googleusercontent.com',
+);
+
 Future<void> registerWithEmailAndPassword(String email, String password) async {
   try {
-    final credential =
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+    final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
   } on FirebaseAuthException catch (e) {
     if (e.code == 'weak-password') {
-      
+      print('La contraseña es demasiado débil.');
     } else if (e.code == 'email-already-in-use') {
-      
+      print('El correo electrónico ya está en uso.');
     }
   } catch (e) {
-    
+    print('Error al registrar el usuario: $e');
   }
 }
 
-Future<void> signInWithEmailAndPassword(
-    String email, String password, BuildContext context) async {
+Future<void> signInWithEmailAndPassword(String email, String password, BuildContext context) async {
   try {
-    final credential = await FirebaseAuth.instance
-        .signInWithEmailAndPassword(email: email, password: password);
-    
+    final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const HomePage()),
     );
   } on FirebaseAuthException catch (e) {
     if (e.code == 'user-not-found') {
-      print('No user found for that email.');
+      print('Usuario no encontrado para ese correo electrónico.');
     } else if (e.code == 'wrong-password') {
-      print('Wrong password provided for that user.');
+      print('Contraseña incorrecta proporcionada para ese usuario.');
     }
   }
 }
 
-Future<UserCredential> signInWithGoogle() async {
- 
-  final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+Future<UserCredential?> signInWithGoogle() async {
+  try {
+    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+    if (googleUser != null) {
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
-  final GoogleSignInAuthentication? googleAuth =
-      await googleUser?.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
 
-  final credential = GoogleAuthProvider.credential(
-    accessToken: googleAuth?.accessToken,
-    idToken: googleAuth?.idToken,
-  );
+      return await FirebaseAuth.instance.signInWithCredential(credential);
+    }
+  } catch (e) {
+    print('Error al iniciar sesión con Google: $e');
+    return null;
+  }
+}
 
-  return await FirebaseAuth.instance.signInWithCredential(credential);
+Future<UserCredential?> signInWithFacebook() async {
+  try {
+    final LoginResult result = await _facebookAuth.login();
+    if (result.status == LoginStatus.success) {
+      final OAuthCredential facebookAuthCredential =
+          FacebookAuthProvider.credential(result.accessToken!.token);
+      return await FirebaseAuth.instance
+          .signInWithCredential(facebookAuthCredential);
+    }
+  } catch (e) {
+    print('Error al iniciar sesión con Facebook: $e');
+    return null;
+  }
+}
+
+class HomePage extends StatelessWidget {
+  const HomePage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Home'),
+      ),
+      body: const Center(
+        child: Text('Bienvenido!'),
+      ),
+    );
+  }
 }
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -70,7 +108,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Stack(
         children: [
           Fondo(),
@@ -82,7 +120,7 @@ class _LoginPageState extends State<LoginPage> {
 }
 
 class Fondo extends StatelessWidget {
-  const Fondo({super.key});
+  const Fondo({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +140,7 @@ class Fondo extends StatelessWidget {
 }
 
 class Contenido extends StatefulWidget {
-  const Contenido({super.key});
+  const Contenido({Key? key}) : super(key: key);
 
   @override
   State<Contenido> createState() => _ContenidoState();
@@ -111,8 +149,8 @@ class Contenido extends StatefulWidget {
 class _ContenidoState extends State<Contenido> {
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,7 +176,7 @@ class _ContenidoState extends State<Contenido> {
 }
 
 class Datos extends StatefulWidget {
-  const Datos({super.key});
+  const Datos({Key? key}) : super(key: key);
 
   @override
   State<Datos> createState() => _DatosState();
@@ -189,12 +227,10 @@ class _DatosState extends State<Datos> {
                 border: const OutlineInputBorder(),
                 hintText: 'contraseña',
                 suffixIcon: IconButton(
-                  icon:
-                      Icon(showPass ? Icons.visibility_off : Icons.visibility),
+                  icon: Icon(showPass ? Icons.visibility_off : Icons.visibility),
                   onPressed: () => {
                     setState(() {
                       showPass = !showPass;
-                      
                     })
                   },
                 )),
@@ -209,7 +245,7 @@ class _DatosState extends State<Datos> {
 }
 
 class Remember extends StatefulWidget {
-  const Remember({super.key});
+  const Remember({Key? key}) : super(key: key);
 
   @override
   State<Remember> createState() => _RememberState();
@@ -239,7 +275,7 @@ class _RememberState extends State<Remember> {
                 context,
                 MaterialPageRoute(
                     builder: (context) => const RecordarPassword()));
-          }, 
+          },
           child: const Text(
             "¿Olvidaste tu contraseña?",
             style: TextStyle(fontSize: 12),
@@ -251,7 +287,7 @@ class _RememberState extends State<Remember> {
 }
 
 class Botones extends StatelessWidget {
-  const Botones({super.key});
+  const Botones({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -313,44 +349,95 @@ class Botones extends StatelessWidget {
           width: double.infinity,
           height: 50,
           child: OutlinedButton(
-              onPressed: () {
-                signInWithGoogle();
-              },
-              child: const Text(
-                'Google',
-                style: TextStyle(
-                  color: Color(0xff142047),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              )),
+            onPressed: () {
+              signInWithGoogle().then((user) {
+                if (user != null) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomePage()),
+                  );
+                }
+              });
+            },
+            child: const Text(
+              'Google',
+              style: TextStyle(
+                color: Color(0xff142047),
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ),
         ),
         const SizedBox(height: 15),
         SizedBox(
           width: double.infinity,
           height: 50,
           child: OutlinedButton(
-              onPressed: () => {},
-              child: const Text(
-                'Facebook',
-                style: TextStyle(
-                  color: Color(0xff142047),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              )),
+            onPressed: () {
+              signInWithFacebook().then((userCredential) {
+                if (userCredential != null) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomePage()),
+                  );
+                }
+              });
+            },
+            child: const Text(
+              'Facebook',
+              style: TextStyle(
+                color: Color(0xff142047),
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ),
         ),
-      
         const SizedBox(height: 20),
         TextButton(
-          onPressed:
-              () {}, 
+          onPressed: () {},
           child: const Text(
             "Politicas de privacidad",
             style: TextStyle(fontSize: 12),
           ),
         ),
       ],
+    );
+  }
+}
+
+class RecordarPassword extends StatelessWidget {
+  const RecordarPassword({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Recordar Contraseña'),
+      ),
+      body: const Center(
+        child: Text('Página de recordar contraseña'),
+      ),
+    );
+  }
+}
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Login App',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: const LoginPage(),
     );
   }
 }
