@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
@@ -48,7 +47,7 @@ Future<void> signInWithEmailAndPassword(String email, String password, BuildCont
   }
 }
 
-Future<UserCredential?> signInWithGoogle() async {
+Future<void> signInWithGoogle(BuildContext context) async {
   try {
     final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
     if (googleUser != null) {
@@ -60,26 +59,33 @@ Future<UserCredential?> signInWithGoogle() async {
         idToken: googleAuth.idToken,
       );
 
-      return await FirebaseAuth.instance.signInWithCredential(credential);
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
     }
   } catch (e) {
     print('Error al iniciar sesión con Google: $e');
-    return null;
   }
 }
 
-Future<UserCredential?> signInWithFacebook() async {
+Future<void> signInWithFacebook(BuildContext context) async {
   try {
     final LoginResult result = await _facebookAuth.login();
     if (result.status == LoginStatus.success) {
       final OAuthCredential facebookAuthCredential =
           FacebookAuthProvider.credential(result.accessToken!.token);
-      return await FirebaseAuth.instance
-          .signInWithCredential(facebookAuthCredential);
+      await FirebaseAuth.instance.signInWithCredential(facebookAuthCredential);
+      
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
     }
   } catch (e) {
     print('Error al iniciar sesión con Facebook: $e');
-    return null;
   }
 }
 
@@ -364,14 +370,7 @@ class Botones extends StatelessWidget {
           height: 50,
           child: OutlinedButton(
             onPressed: () {
-              signInWithGoogle().then((user) {
-                if (user != null) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HomePage()),
-                  );
-                }
-              });
+              signInWithGoogle(context);
             },
             child: const Text(
               'Google',
@@ -389,14 +388,7 @@ class Botones extends StatelessWidget {
           height: 50,
           child: OutlinedButton(
             onPressed: () {
-              signInWithFacebook().then((userCredential) {
-                if (userCredential != null) {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HomePage()),
-                  );
-                }
-              });
+              signInWithFacebook(context);
             },
             child: const Text(
               'Facebook',
