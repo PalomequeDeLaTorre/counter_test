@@ -1,7 +1,8 @@
-// import 'package:countertes/pages/home_page.dart';
 import 'package:counter_test/pages/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,6 +15,15 @@ void main() async {
     authDomain: 'com.login.countertest',
     storageBucket: 'loginbd-da00c.appspot.com',
   ));
+
+  if (kIsWeb) {
+    await FacebookAuth.i.webAndDesktopInitialize(
+      appId: "874664834433450",
+      cookie: true,
+      xfbml: true,
+      version: "v15.0",
+    );
+  }
   runApp(const MyApp());
 }
 
@@ -29,7 +39,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'LOGIN',
+      title: 'Material App',
       home: LoginPage(),
     );
   }

@@ -19,7 +19,7 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             onPressed: () {
-              // Redirigir a la página de inicio de sesión
+
               Navigator.pushReplacementNamed(context, '/');
             },
             icon: const Icon(Icons.logout),
@@ -31,7 +31,7 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text("Número de clicks"),
-            Text("$cont"), // Mostrar variables el $
+            Text("$cont"), 
           ],
         ),
       ),

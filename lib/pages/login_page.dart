@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 
 final TextEditingController _emailController = TextEditingController();
 final TextEditingController _passwordController = TextEditingController();
 
-final FacebookAuth _facebookAuth = FacebookAuth.instance;
 final GoogleSignIn _googleSignIn = GoogleSignIn(
   clientId: '235029653016-v2eekuvqd7g6p9ps1kn02nnnpv3up5i0.apps.googleusercontent.com',
 );
+final FacebookAuth _facebookAuth = FacebookAuth.instance;
 
 Future<void> registerWithEmailAndPassword(String email, String password) async {
   try {
@@ -90,6 +91,19 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/',
+                (Route<dynamic> route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: const Center(
         child: Text('Bienvenido!'),
